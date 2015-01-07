@@ -6,8 +6,9 @@
 #
 #     monthly_dates n weekday year
 #
-# where n is in [2 .. 4] indicating the week of the month, weekday is a 3-letter
-# weekday abbreviation, and year is the year number for which to calculate the dates.
+# where n is in [2 .. 4] or [-2 .. -4] indicating the week of the month (negative
+# numbers counting back from the end of the month), weekday is a 3-letter weekday
+# abbreviation, and year is the year number for which to calculate the dates.
 # The script will write the list of suitable dates, one to a line, to standard output.
 # Any date that collides with a public holiday will be brought forward one week
 # (which is why n cannot be 1).
@@ -74,9 +75,16 @@ class MonthlyRule :
             earliest_day = 1 + (self.weekday + 7 - start_weekday) % 7
             day = earliest_day + 7 * (self.n - 1)
         else :
-            month_end = month_start + datetime.timedelta(days = 31)
-            month_end.replace(day = 1)
-            month_end -= datetime.timedelta(days = 1)
+            month_end = \
+                (
+                    (
+                        month_start
+                    +
+                        datetime.timedelta(days = 31) # guaranteed to step into following month
+                    ).replace(day = 1) # ensure at start of month
+                -
+                    datetime.timedelta(days = 1) # step back to end of original month
+                )
             end_weekday = month_end.isoweekday() % 7
             latest_day = month_end.day - (end_weekday + 7 - self.weekday) % 7
             day = latest_day + 7 * (self.n + 1)
@@ -233,7 +241,7 @@ def mainline() :
     #end if
     n = int(sys.argv[1])
     weekday = DAY.parse(sys.argv[2])
-    assert n >= 2, "cannot use first %s otherwise cannot bring forward on holiday" % weekday.name.title()
+    assert n > 0 and n >= 2 or n < 0 and n > -4, "cannot use first %s otherwise cannot bring forward on holiday" % weekday.name.title()
     year = int(sys.argv[3])
     rule = MonthlyRule(n, weekday)
     assert year in valid_years, "I can only handle years %s" % ", ".join("%d" % year for year in valid_years)
