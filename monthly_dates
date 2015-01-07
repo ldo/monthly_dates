@@ -96,17 +96,25 @@ class YearlyRule :
 # <http://www.dol.govt.nz/er/holidaysandleave/publicholidays/publicholidaydates/>
 #-
 
-valid_years = {2015} # can fill in more later
+valid_years = {2014, 2015} # can fill in more later
 holidays = \
     [
         {
             "description" : "Good Friday",
-            "dates" : {2015 : datetime.date(2015, 4, 4)}, # needs to be updated for valid_years
+            "dates" :
+                { # needs to be updated for valid_years
+                    2014 : datetime.date(2014, 4, 18),
+                    2015 : datetime.date(2015, 4, 4),
+                },
             "to_monday" : False, # actually irrelevant
         },
         {
             "description" : "Easter Monday",
-            "dates" : {2015 : datetime.date(2015, 4, 7)}, # needs to be updated for valid_years
+            "dates" :
+                { # needs to be updated for valid_years
+                    2014 : datetime.date(2014, 4, 21),
+                    2015 : datetime.date(2015, 4, 7),
+                },
             "to_monday" : False, # actually irrelevant
         },
         {
@@ -121,7 +129,11 @@ holidays = \
         },
         {
             "description" : "Auckland Anniversary",
-            "dates" : {2015 : datetime.date(2015, 1, 26)},
+            "dates" :
+                {
+                    2014 : datetime.date(2014, 1, 27),
+                    2015 : datetime.date(2015, 1, 26),
+                },
               # todo: general algorithm for dates, can be quite complex for different regions
             "to_monday" : True, # relevant if/when I generalize the dates
         },
