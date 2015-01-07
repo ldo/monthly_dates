@@ -101,7 +101,7 @@ holidays = \
     [
         {
             "description" : "Good Friday",
-            "dates" : {2015 : datetime.date(2015, 4, 3)}, # needs to be updated for valid_years
+            "dates" : {2015 : datetime.date(2015, 4, 4)}, # needs to be updated for valid_years
             "to_monday" : False, # actually irrelevant
         },
         {
