@@ -179,11 +179,15 @@ def get_holidays(year) :
     #end for
     result = set()
     for date in candidates :
-        day = DAY(date.isoweekday() % 7)
-        if day.is_weekend() :
-            date += datetime.timedelta(days = (DAY.MON.value + 7 - day.value) % 7)
-            if date in result :
-                date += datetime.timedelta(days = 1)
+        if date in to_monday :
+            day = DAY(date.isoweekday() % 7)
+            # orig_date = date # debug
+            if day.is_weekend() :
+                date += datetime.timedelta(days = (DAY.MON.value + 7 - day.value) % 7)
+                if date in result :
+                    date += datetime.timedelta(days = 1)
+                #end if
+                # sys.stderr.write("mondayize holiday %s %s => %s\n" % (day.name, repr(orig_date), repr(date))) # debug
             #end if
         #end if
         result.add(date)
