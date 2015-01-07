@@ -1,0 +1,224 @@
+#!/usr/bin/python3
+#+
+# This script calculates dates for regular monthly meetings of the
+# form “nth <weekday> of every month”, e.g. “4th Monday of every month”.
+# Invoke this script as follows:
+#
+#     monthly_dates n weekday year
+#
+# where n is in [1 .. 4] or [-1 .. -4] (last, second-last etc),
+# weekday is a 3-letter weekday abbreviation, and year is the year
+# number for which to calculate the dates. The script will write
+# the list of suitable dates, one to a line, to standard output.
+#
+# Copyright 2015 by Lawrence D'Oliveiro <ldo@geek-central.gen.nz>.
+# Licensed under Creative Commons CC0 # <https://creativecommons.org/publicdomain/zero/1.0/>.
+#-
+
+import enum
+import sys
+import datetime
+
+@enum.unique
+class DAY(enum.IntEnum) :
+    "days of the week."
+    SUN = 0
+    MON = 1
+    TUE = 2
+    WED = 3
+    THU = 4
+    FRI = 5
+    SAT = 6
+
+    @classmethod
+    def parse(celf, name) :
+        "converts a 3-letter abbreviation to the corresponding enum instance."
+        return \
+            celf[name[0:3].upper()]
+    #end parse
+
+    def is_weekend(self) :
+        return \
+            self in (DAY.SAT, DAY.SUN)
+    #end is_weekend
+
+#end DAY
+
+class MonthlyRule :
+    "expresses and evaluates a rule of the form <n>th <weekday> of the month."
+
+    def __init__(self, n, weekday) :
+        self.n = int(n)
+        assert 0 < self.n <= 4 or 0 > self.n >= -4, "n must be in [1 .. 4] or [-1 .. -4]"
+        assert isinstance(weekday, DAY)
+        self.weekday = weekday.value
+    #end __init__
+
+    def evaluate(self, year, month) :
+        "returns the date that matches the rule for the specified month."
+        month_start = datetime.date(year, month, 1)
+        if self.n > 0 :
+            start_weekday = month_start.isoweekday() % 7
+            earliest_day = 1 + (self.weekday + 7 - start_weekday) % 7
+            day = earliest_day + 7 * (self.n - 1)
+        else :
+            month_end = month_start + datetime.timedelta(days = 31)
+            month_end.replace(day = 1)
+            month_end -= datetime.timedelta(days = 1)
+            end_weekday = month_end.isoweekday() % 7
+            latest_day = month_end.day - (end_weekday + 7 - self.weekday) % 7
+            day = latest_day + 7 * (self.n + 1)
+        #end if
+        return \
+            datetime.date(year, month, day)
+    #end evaluate
+
+#end MonthlyRule
+
+class YearlyRule :
+    "expresses and evaluates a rule of the form <n>th <weekday> of <month>."
+
+    def __init__(self, n, weekday, month) :
+        self.month = int(month)
+        self._rule = MonthlyRule(n, weekday)
+    #end __init__
+
+    def evaluate(self, year) :
+        "returns the date that matches the rule for the specified year."
+        return \
+            self._rule.evaluate(year, self.month)
+    #end evaluate
+
+#end YearlyRule
+
+#+
+# Holiday dates, taken from
+# <http://www.dol.govt.nz/er/holidaysandleave/publicholidays/publicholidaydates/>
+#-
+
+valid_years = {2015} # can fill in more later
+holidays = \
+    [
+        {
+            "description" : "Good Friday",
+            "dates" : {2015 : datetime.date(2015, 4, 3)}, # needs to be updated for valid_years
+            "to_monday" : False, # actually irrelevant
+        },
+        {
+            "description" : "Easter Monday",
+            "dates" : {2015 : datetime.date(2015, 4, 7)}, # needs to be updated for valid_years
+            "to_monday" : False, # actually irrelevant
+        },
+        {
+            "description" : "Queen’s Birthday",
+            "rule" :  YearlyRule(1, DAY.MON, 6),
+            "to_monday" : False, # actually irrelevant
+        },
+        {
+            "description" : "Labour Day",
+            "rule" :  YearlyRule(4, DAY.MON, 10),
+            "to_monday" : False, # actually irrelevant
+        },
+        {
+            "description" : "Auckland Anniversary",
+            "dates" : {2015 : datetime.date(2015, 1, 26)},
+              # todo: general algorithm for dates, can be quite complex for different regions
+            "to_monday" : True, # relevant if/when I generalize the dates
+        },
+        # todo: other region anniversaries
+    ]
+def fill_in_holidays() :
+    # completes the more dynamic aspects of the holidays table.
+    for holiday in holidays :
+        if "rule" in holiday :
+            rule = holiday["rule"]
+            assert isinstance(rule, YearlyRule)
+            holiday["dates"] = dict((year, rule.evaluate(year)) for year in valid_years)
+        else :
+            for year in valid_years :
+                if year not in holiday["dates"] :
+                    raise AssertionError("missing year %d for %s" % (year, holiday["description"]))
+                #end if
+            #end if
+        #end if
+    #end for
+    for description, month, day, to_monday in \
+        (
+            ("New Year’s Day", 1, 1, True),
+            ("Day After New Year’s Day", 1, 2, True),
+            ("Waitangi Day", 2, 6, True),
+            ("ANZAC Day", 4, 25, True),
+            ("Christmas Day", 12, 25, True),
+            ("Boxing Day", 12, 26, True),
+        ) \
+    :
+        holidays.append \
+          (
+            {
+                "description" : description,
+                "to_monday" : to_monday,
+                "dates" : dict((year, datetime.date(year, month, day)) for year in valid_years),
+            }
+          )
+    #end for
+#end fill_in_holidays
+fill_in_holidays()
+del fill_in_holidays
+
+def get_holidays(year) :
+    "returns the actual holiday dates for the specified year."
+    assert year in valid_years
+    candidates = set()
+    to_monday = set()
+    for holiday in holidays :
+        date = holiday["dates"][year]
+        candidates.add(date)
+        if holiday["to_monday"] :
+            to_monday.add(date)
+        #end if
+    #end for
+    result = set()
+    for date in candidates :
+        day = DAY(date.isoweekday() % 7)
+        if day.is_weekend() :
+            date += datetime.timedelta(days = (DAY.MON.value + 7 - day.value) % 7)
+            if date in result :
+                date += datetime.timedelta(days = 1)
+            #end if
+        #end if
+        result.add(date)
+    #end for
+    return \
+        result
+#end get_holidays
+
+#+
+# Mainline
+#-
+
+def mainline() :
+    if len(sys.argv) != 4 :
+        raise ValueError("need exactly 3 args: n weekday year")
+    #end if
+    n = int(sys.argv[1])
+    weekday = DAY.parse(sys.argv[2])
+    assert n >= 2, "cannot use first %s otherwise cannot bring forward on holiday" % weekday.name.title()
+    year = int(sys.argv[3])
+    rule = MonthlyRule(n, weekday)
+    assert year in valid_years, "I can only handle years %s" % ", ".join("%d" % year for year in valid_years)
+    actual_holidays = get_holidays(year)
+    for month in range(0, 12) :
+        month += 1
+        candidate = rule.evaluate(year, month)
+        moved = ""
+        if candidate in actual_holidays :
+            candidate -= datetime.timedelta(days = 7)
+            moved = " (MOVED)"
+        #end if
+        sys.stdout.write(candidate.strftime("%a %Y-%m-%d") + moved + "\n")
+    #end for
+#end mainline
+
+if __name__ == "__main__" :
+    mainline()
+#end if
