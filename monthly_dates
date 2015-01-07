@@ -249,12 +249,17 @@ def mainline() :
     for month in range(0, 12) :
         month += 1
         candidate = rule.evaluate(year, month)
-        moved = ""
+        status = ""
         if candidate in actual_holidays :
-            candidate -= datetime.timedelta(days = 7)
-            moved = " (MOVED)"
+            new_candidate = candidate - datetime.timedelta(days = 7)
+            if new_candidate not in actual_holidays :
+                candidate = new_candidate
+                status = " (MOVED)"
+            else :
+                status = " (CANNOT MOVE)"
+            #end if
         #end if
-        sys.stdout.write(candidate.strftime("%a %Y-%m-%d") + moved + "\n")
+        sys.stdout.write(candidate.strftime("%a %Y-%m-%d") + status + "\n")
     #end for
 #end mainline
 
