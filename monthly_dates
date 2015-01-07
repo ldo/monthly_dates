@@ -1,23 +1,35 @@
 #!/usr/bin/python3
 #+
-# This script calculates dates for regular monthly meetings of the
-# form “nth <weekday> of every month”, e.g. “4th Monday of every month”.
-# Invoke this script as follows:
+# This script calculates dates for regular monthly meetings of the form
+# “nth <weekday> of every month”, e.g. “4th Monday of every month”, taking
+# into account New Zealand public holidays. Invoke this script as follows:
 #
 #     monthly_dates n weekday year
 #
-# where n is in [1 .. 4] or [-1 .. -4] (last, second-last etc),
-# weekday is a 3-letter weekday abbreviation, and year is the year
-# number for which to calculate the dates. The script will write
-# the list of suitable dates, one to a line, to standard output.
+# where n is in [2 .. 4] indicating the week of the month, weekday is a 3-letter
+# weekday abbreviation, and year is the year number for which to calculate the dates.
+# The script will write the list of suitable dates, one to a line, to standard output.
+# Any date that collides with a public holiday will be brought forward one week
+# (which is why n cannot be 1).
+#
+# For example, the command
+#
+#     monthly_dates 4 mon 2015
+#
+# will show the suitable dates for meetings on the 4th Monday of every month during
+# 2015. Where a date falls on a holiday, the 3rd Monday will be shown instead.
 #
 # Copyright 2015 by Lawrence D'Oliveiro <ldo@geek-central.gen.nz>.
-# Licensed under Creative Commons CC0 # <https://creativecommons.org/publicdomain/zero/1.0/>.
+# Licensed under Creative Commons CC0 <https://creativecommons.org/publicdomain/zero/1.0/>.
 #-
 
 import enum
 import sys
 import datetime
+
+#+
+# Useful stuff
+#-
 
 @enum.unique
 class DAY(enum.IntEnum) :
@@ -55,7 +67,7 @@ class MonthlyRule :
     #end __init__
 
     def evaluate(self, year, month) :
-        "returns the date that matches the rule for the specified month."
+        "returns the date that matches the rule for the specified year and month."
         month_start = datetime.date(year, month, 1)
         if self.n > 0 :
             start_weekday = month_start.isoweekday() % 7
