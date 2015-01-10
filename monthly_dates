@@ -12,7 +12,8 @@
 # The script will write the list of suitable dates, one to a line, to standard output.
 # If --holiday=adj is specified, then adj is an integer number of days (can be positive
 # or negative); any date that collides with a public holiday will be moved by
-# this number of days.
+# this number of days. This option can be specified multiple times; each adjustment
+# will be tried in turn until a satisfactory one can be found.
 #
 # For example, the command
 #
@@ -247,10 +248,14 @@ def mainline() :
     if len(args) != 3 :
         raise ValueError("need exactly 3 args: n weekday year")
     #end if
-    holiday_adjust = 0
+    holiday_adjust = []
     for keyword, value in opts :
         if keyword == "--holiday" :
-            holiday_adjust = int(value)
+            value = int(value)
+            if value == 0 :
+                raise ValueError("value for %s cannot be zero" % keyword)
+            #end if
+            holiday_adjust.append(value)
         #end if
     #end for
     n = int(args[0])
@@ -263,14 +268,21 @@ def mainline() :
         month += 1
         candidate = rule.evaluate(year, month)
         status = ""
-        if holiday_adjust != 0 and candidate in actual_holidays :
-            new_candidate = candidate + datetime.timedelta(days = holiday_adjust)
-            if new_candidate.month == month and new_candidate not in actual_holidays :
-                candidate = new_candidate
-                status = " (moved %+d)" % holiday_adjust
-            else :
-                status = " (CANNOT MOVE)"
-            #end if
+        if len(holiday_adjust) != 0 and candidate in actual_holidays :
+            adjusts = iter(holiday_adjust)
+            while True :
+                adjust = next(adjusts, None)
+                if adjust == None :
+                    status = " (CANNOT MOVE)"
+                    break
+                #end if
+                new_candidate = candidate + datetime.timedelta(days = adjust)
+                if new_candidate.month == month and new_candidate not in actual_holidays :
+                    candidate = new_candidate
+                    status = " (moved %+d)" % adjust
+                    break
+                #end if
+            #end while
         #end if
         sys.stdout.write(candidate.strftime("%a %Y-%m-%d") + status + "\n")
     #end for
