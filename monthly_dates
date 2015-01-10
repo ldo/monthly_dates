@@ -1,21 +1,22 @@
 #!/usr/bin/python3
 #+
 # This script calculates dates for regular monthly meetings of the form
-# “nth <weekday> of every month”, e.g. “4th Monday of every month”, taking
-# into account New Zealand public holidays. Invoke this script as follows:
+# “nth <weekday> of every month”, e.g. “4th Monday of every month”, optionally
+# taking into account New Zealand public holidays. Invoke this script as follows:
 #
-#     monthly_dates n weekday year
+#     monthly_dates [--holiday=adj] n weekday year
 #
-# where n is in [2 .. 4] or [-2 .. -4] indicating the week of the month (negative
+# where n is in [1 .. 4] or [-1 .. -4] indicating the week of the month (negative
 # numbers counting back from the end of the month), weekday is a 3-letter weekday
 # abbreviation, and year is the year number for which to calculate the dates.
 # The script will write the list of suitable dates, one to a line, to standard output.
-# Any date that collides with a public holiday will be brought forward one week
-# (which is why n cannot be 1).
+# If --holiday=adj is specified, then adj is an integer number of days (can be positive
+# or negative); any date that collides with a public holiday will be moved by
+# this number of days.
 #
 # For example, the command
 #
-#     monthly_dates 4 mon 2015
+#     monthly_dates --holiday=-7 4 mon 2015
 #
 # will show the suitable dates for meetings on the 4th Monday of every month during
 # 2015. Where a date falls on a holiday, the 3rd Monday will be shown instead.
@@ -27,6 +28,7 @@
 import enum
 import sys
 import datetime
+import getopt
 
 #+
 # Useful stuff
@@ -181,8 +183,8 @@ def fill_in_holidays() :
         (
             ("New Year’s Day", 1, 1, True),
             ("Day After New Year’s Day", 1, 2, True),
-            ("Waitangi Day", 2, 6, True),
-            ("ANZAC Day", 4, 25, True),
+            ("Waitangi Day", 2, 6, True), # note: not Mondayized before 2014
+            ("ANZAC Day", 4, 25, True), # note: not Mondayized before 2014
             ("Christmas Day", 12, 25, True),
             ("Boxing Day", 12, 26, True),
         ) \
@@ -236,13 +238,24 @@ def get_holidays(year) :
 #-
 
 def mainline() :
-    if len(sys.argv) != 4 :
+    opts, args = getopt.getopt \
+      (
+        sys.argv[1:],
+        "",
+        ["holiday="]
+      )
+    if len(args) != 3 :
         raise ValueError("need exactly 3 args: n weekday year")
     #end if
-    n = int(sys.argv[1])
-    weekday = DAY.parse(sys.argv[2])
-    assert n > 0 and n >= 2 or n < 0 and n > -4, "cannot use first %s otherwise cannot bring forward on holiday" % weekday.name.title()
-    year = int(sys.argv[3])
+    holiday_adjust = 0
+    for keyword, value in opts :
+        if keyword == "--holiday" :
+            holiday_adjust = int(value)
+        #end if
+    #end for
+    n = int(args[0])
+    weekday = DAY.parse(args[1])
+    year = int(args[2])
     rule = MonthlyRule(n, weekday)
     assert year in valid_years, "I can only handle years %s" % ", ".join("%d" % year for year in valid_years)
     actual_holidays = get_holidays(year)
@@ -250,11 +263,11 @@ def mainline() :
         month += 1
         candidate = rule.evaluate(year, month)
         status = ""
-        if candidate in actual_holidays :
-            new_candidate = candidate - datetime.timedelta(days = 7)
-            if new_candidate not in actual_holidays :
+        if holiday_adjust != 0 and candidate in actual_holidays :
+            new_candidate = candidate + datetime.timedelta(days = holiday_adjust)
+            if new_candidate.month == month and new_candidate not in actual_holidays :
                 candidate = new_candidate
-                status = " (MOVED)"
+                status = " (moved %+d)" % holiday_adjust
             else :
                 status = " (CANNOT MOVE)"
             #end if
