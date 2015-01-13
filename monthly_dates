@@ -255,6 +255,9 @@ def mainline() :
             if value == 0 :
                 raise ValueError("value for %s cannot be zero" % keyword)
             #end if
+            if value in holiday_adjust :
+                raise ValueError("duplicate value %d for %s" % (value, keyword))
+            #end if
             holiday_adjust.append(value)
         #end if
     #end for
