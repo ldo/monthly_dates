@@ -22,6 +22,14 @@
 # will show the suitable dates for meetings on the 4th Monday of every month during
 # 2015. Where a date falls on a holiday, the 3rd Monday will be shown instead.
 #
+# As another example, the command
+#
+#     monthly_dates --holiday=-1 --holiday=-2 -- -1 fri 2014
+#
+# shows suitable meeting dates for the last Friday of every month during 2014. Where
+# the date falls on a holiday, it will be brought forward to the Thursday, or even
+# the Wednesday, as necessary.
+#
 # Copyright 2015 by Lawrence D'Oliveiro <ldo@geek-central.gen.nz>.
 # Licensed under Creative Commons CC0 <https://creativecommons.org/publicdomain/zero/1.0/>.
 #-
