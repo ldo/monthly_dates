@@ -127,7 +127,7 @@ class YearlyRule :
 # <http://www.dol.govt.nz/er/holidaysandleave/publicholidays/publicholidaydates/>
 #-
 
-valid_years = {2014, 2015, 2016} # can fill in more later
+valid_years = {2014, 2015, 2016, 2017} # can fill in more later
 holidays = \
     [
         {
@@ -137,6 +137,7 @@ holidays = \
                     2014 : datetime.date(2014, 4, 18),
                     2015 : datetime.date(2015, 4, 4),
                     2016 : datetime.date(2016, 3, 25),
+                    2017 : datetime.date(2017, 4, 14),
                 },
             "to_monday" : False, # actually irrelevant
         },
@@ -147,6 +148,7 @@ holidays = \
                     2014 : datetime.date(2014, 4, 21),
                     2015 : datetime.date(2015, 4, 7),
                     2016 : datetime.date(2016, 3, 28),
+                    2017 : datetime.date(2017, 4, 17),
                 },
             "to_monday" : False, # actually irrelevant
         },
@@ -167,6 +169,7 @@ holidays = \
                     2014 : datetime.date(2014, 1, 27),
                     2015 : datetime.date(2015, 1, 26),
                     2016 : datetime.date(2016, 2, 1),
+                    2017 : datetime.date(2017, 1, 30),
                 },
               # todo: general algorithm for dates, can be quite complex for different regions
             "to_monday" : True, # relevant if/when I generalize the dates
