@@ -124,7 +124,7 @@ class YearlyRule :
 
 #+
 # Holiday dates, taken from
-# <http://www.dol.govt.nz/er/holidaysandleave/publicholidays/publicholidaydates/>
+# <https://www.employment.govt.nz/leave-and-holidays/public-holidays/public-holidays-and-anniversary-dates/>
 #-
 
 valid_years = {2014, 2015, 2016, 2017} # can fill in more later
