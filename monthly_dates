@@ -127,7 +127,7 @@ class YearlyRule :
 # <https://www.employment.govt.nz/leave-and-holidays/public-holidays/public-holidays-and-anniversary-dates/>
 #-
 
-valid_years = {2014, 2015, 2016, 2017, 2018, 2019, 2020} # can fill in more later
+valid_years = {2014, 2015, 2016, 2017, 2018, 2019, 2020, 2021, 2022} # can fill in more later
 holidays = \
     [
         {
@@ -141,6 +141,8 @@ holidays = \
                     2018 : datetime.date(2018, 3, 30),
                     2019 : datetime.date(2019, 4, 19),
                     2020 : datetime.date(2020, 4, 10),
+                    2021 : datetime.date(2021, 4, 2),
+                    2022 : datetime.date(2022, 4, 15),
                 },
             "to_monday" : False, # actually irrelevant
         },
@@ -155,6 +157,8 @@ holidays = \
                     2018 : datetime.date(2018, 4, 2),
                     2019 : datetime.date(2019, 4, 22),
                     2020 : datetime.date(2020, 4, 13),
+                    2021 : datetime.date(2021, 4, 5),
+                    2022 : datetime.date(2022, 4, 18),
                 },
             "to_monday" : False, # actually irrelevant
         },
@@ -179,6 +183,8 @@ holidays = \
                     2018 : datetime.date(2018, 1, 29),
                     2019 : datetime.date(2019, 1, 28),
                     2020 : datetime.date(2020, 1, 27),
+                    2021 : datetime.date(2021, 2, 1),
+                    2022 : datetime.date(2022, 1, 31),
                 },
               # todo: general algorithm for dates, can be quite complex for different regions
             "to_monday" : True, # relevant if/when I generalize the dates
